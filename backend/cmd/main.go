@@ -13,8 +13,7 @@ import (
 )
 
 func main() {
-
-	// load env
+	// load env (Railway tidak pakai .env, tapi tetap aman dipanggil)
 	godotenv.Load()
 
 	// connect database
@@ -23,14 +22,15 @@ func main() {
 	// init gin
 	r := gin.Default()
 
-	// CORS configuration
+	// CORS — allow multiple origins
 	allowedOrigin := os.Getenv("ALLOWED_ORIGIN")
-	if allowedOrigin == "" {
-		allowedOrigin = "http://localhost:5173" // fallback
+	origins := []string{"http://localhost:5173", "http://localhost:3000"}
+	if allowedOrigin != "" {
+		origins = append(origins, allowedOrigin)
 	}
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{allowedOrigin},
+		AllowOrigins:     origins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -41,6 +41,11 @@ func main() {
 	// setup routes
 	routes.SetupRoutes(r)
 
-	// run server
-	r.Run(":8080")
+	// Railway provides PORT env
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	r.Run(":" + port)
 }
